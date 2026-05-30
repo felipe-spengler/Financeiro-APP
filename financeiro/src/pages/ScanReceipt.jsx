@@ -60,6 +60,7 @@ export default function ScanReceipt() {
   const {
     isListening,
     transcript,
+    audioBase64,
     error,
     startListening,
     stopListening,
@@ -75,11 +76,16 @@ export default function ScanReceipt() {
       wasListening.current = true;
     } else if (wasListening.current) {
       wasListening.current = false;
-      if (transcript.trim()) {
-        processVoiceText(transcript);
-      }
+      // Pequeno timeout para dar tempo do hook carregar o base64 do áudio
+      setTimeout(() => {
+        if (audioBase64) {
+          processVoiceText(null, audioBase64);
+        } else if (transcript.trim()) {
+          processVoiceText(transcript, null);
+        }
+      }, 200);
     }
-  }, [isListening, transcript]);
+  }, [isListening, transcript, audioBase64]);
 
   // Carregar cartões de crédito disponíveis do usuário
   useEffect(() => {
@@ -102,13 +108,14 @@ export default function ScanReceipt() {
     stopListening();
   };
 
-  const processVoiceText = async (textToParse) => {
+  const processVoiceText = async (textToParse, audioToParse = null) => {
     setStep('processing');
     setIsProcessing(true);
 
     try {
-      // Envia a fala transcrevida para a inteligência artificial do backend
-      const result = await base44.integrations.Core.ParseVoice(textToParse);
+      // Envia a fala transcrevida ou o áudio gravado em base64 para a inteligência artificial
+      const payload = audioToParse ? { audio: audioToParse } : { text: textToParse };
+      const result = await base44.integrations.Core.ParseVoice(payload);
       
       setFormData((prev) => ({
         ...prev,

@@ -218,9 +218,9 @@ fastify.post('/api/ai/scan', { preValidation: [(fastify as any).authenticate] },
 // === 4. DESPESAS E SYNC OFFLINE ===
 fastify.post('/api/ai/parse-voice', { preValidation: [(fastify as any).authenticate] }, async (request: any, reply: any) => {
   const data: any = request.body;
-  const { text } = data;
-  if (!text) {
-    return reply.status(400).send({ error: "O texto para processamento é obrigatório." });
+  const { text, audio } = data;
+  if (!text && !audio) {
+    return reply.status(400).send({ error: "O texto ou áudio para processamento é obrigatório." });
   }
 
   try {
@@ -234,9 +234,8 @@ fastify.post('/api/ai/parse-voice', { preValidation: [(fastify as any).authentic
       : "";
 
     const prompt = `Você é um analista financeiro de voz inteligente para um aplicativo de controle de gastos em português.
-Seu objetivo é analisar a transcrição de voz fornecida e extrair de forma inteligente os atributos financeiros em formato JSON.
+Seu objetivo é analisar a gravação de áudio ou transcrição de voz fornecida e extrair de forma inteligente os atributos financeiros em formato JSON.
 
-Texto falado: "${text}"
 ${companyInstruction}
 Regras para preenchimento de campos:
 1. "amount": O valor numérico da compra/entrada. Exemplo: "50 reais" -> 50.00, "1500 de vendas" -> 1500.00.
@@ -258,9 +257,23 @@ Regras para preenchimento de campos:
 
 Retorne estritamente o JSON.`;
 
+    const contents: any[] = [];
+    if (audio) {
+      const base64Str = audio.replace(/^data:audio\/\w+;base64,/, '');
+      contents.push({
+        inlineData: {
+          data: base64Str,
+          mimeType: "audio/webm"
+        }
+      });
+      contents.push(prompt + `\nO áudio acima contém o comando falado pelo usuário. Transcreva-o silenciosamente e processe o JSON resultante.`);
+    } else {
+      contents.push(`Texto falado: "${text}"\n` + prompt);
+    }
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: prompt,
+      contents: contents,
       config: {
         responseMimeType: "application/json",
         responseSchema: {

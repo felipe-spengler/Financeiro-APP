@@ -93,8 +93,9 @@ export const base44 = {
         const res = await apiClient.post('/ai/scan', data);
         return res.data;
       },
-      ParseVoice: async (text) => {
-        const res = await apiClient.post('/ai/parse-voice', { text });
+      ParseVoice: async (payload) => {
+        const data = typeof payload === 'string' ? { text: payload } : payload;
+        const res = await apiClient.post('/ai/parse-voice', data);
         return res.data;
       }
     }
