@@ -45,6 +45,7 @@ jobs:
           cd financeiro
           npm install @capacitor/android
           npx cap add android
+          node inject-permissions.js
           npx @capacitor/assets generate
           npx cap sync
 
