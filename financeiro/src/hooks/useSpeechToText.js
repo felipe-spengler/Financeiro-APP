@@ -12,8 +12,8 @@ export default function useSpeechToText() {
     
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
-      rec.continuous = true;
-      rec.interimResults = true;
+      rec.continuous = false;
+      rec.interimResults = false;
       rec.lang = 'pt-BR';
 
       rec.onstart = () => {

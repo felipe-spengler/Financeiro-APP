@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -64,6 +64,20 @@ export default function ScanReceipt() {
     browserSupportsSpeechRecognition
   } = useSpeechToText();
 
+  // Ref e Effect para detectar fim automático da fala e enviar pra processar
+  const wasListening = useRef(false);
+
+  useEffect(() => {
+    if (isListening) {
+      wasListening.current = true;
+    } else if (wasListening.current) {
+      wasListening.current = false;
+      if (transcript.trim()) {
+        processVoiceText(transcript);
+      }
+    }
+  }, [isListening, transcript]);
+
   // Carregar cartões de crédito disponíveis do usuário
   useEffect(() => {
     async function loadCards() {
@@ -83,11 +97,6 @@ export default function ScanReceipt() {
   // Monitora a finalização da fala e envia para o backend
   const handleStopRecording = async () => {
     stopListening();
-    if (!transcript.trim()) {
-      toast({ title: 'Voz não detectada', description: 'Por favor, fale um comando para registrar seu gasto.', variant: 'destructive' });
-      return;
-    }
-    await processVoiceText(transcript);
   };
 
   const processVoiceText = async (textToParse) => {
