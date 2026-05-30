@@ -31,3 +31,7 @@ Thumbs.db
 **/playwright-report/
 **/test-results/
 **/*.log
+
+# SSH keys
+chave.pem
+
