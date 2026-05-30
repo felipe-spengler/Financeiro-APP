@@ -328,7 +328,7 @@ fastify.get('/api/reports/export', { preValidation: [(fastify as any).authentica
 
 const start = async () => {
   try {
-    await fastify.listen({ port: 3000 });
+    await fastify.listen({ port: 3000, host: '0.0.0.0' });
     console.log(`🚀 FinanceiroApp Fastify Backend rodando na porta 3000`);
   } catch (err) {
     fastify.log.error(err);
