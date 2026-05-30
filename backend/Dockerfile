@@ -1,4 +1,7 @@
-FROM node:20-alpine
+FROM node:20-slim
+
+# Install OpenSSL for Prisma compatibility in Debian slim
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -16,5 +19,5 @@ COPY . .
 # Expose port
 EXPOSE 3000
 
-# Start server using ts-node (simple and works perfectly out of the box with the ts-node configuration)
+# Start server using ts-node
 CMD ["npm", "run", "dev"]
