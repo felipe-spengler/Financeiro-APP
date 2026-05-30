@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { base44, apiClient } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { formatCurrency } from '@/lib/constants';
 import EmptyState from '@/components/common/EmptyState';
 import { Plus, FolderOpen, Briefcase, Plane, Building2, Loader2, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
 
 const TYPE_ICONS = {
   projeto: Briefcase,
@@ -37,6 +38,46 @@ export default function Projects() {
     queryKey: ['projects'],
     queryFn: () => base44.entities.Project.list('-created_date'),
   });
+
+  const { toast } = useToast();
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+
+  const handleCheckUpdate = async () => {
+    try {
+      setCheckingUpdate(true);
+      const localVersion = localStorage.getItem('app_version') || '1.0.0';
+      const res = await apiClient.get('/version');
+      const backendVersion = res.data.version;
+
+      if (localVersion !== backendVersion) {
+        toast({
+          title: "Nova versão encontrada! 🚀",
+          description: `Atualizando da versão v${localVersion} para v${backendVersion}...`
+        });
+        
+        // Limpar a versão local e forçar recarga para que o AutoUpdater mostre o progresso e baixe a nova versão
+        localStorage.setItem('app_version', '1.0.0');
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        toast({
+          title: "Aplicativo Atualizado! ✅",
+          description: `Você já está rodando a versão mais recente (v${localVersion}).`
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Falha na verificação",
+        description: "Não foi possível conectar ao servidor para verificar atualizações.",
+        variant: "destructive"
+      });
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
 
   const { data: expenses = [] } = useQuery({
     queryKey: ['expenses'],
@@ -80,6 +121,30 @@ export default function Projects() {
           </div>
           <Button variant="ghost" size="sm" onClick={() => logout(true)} className="text-xs font-bold text-destructive hover:bg-destructive/10">
             Sair
+          </Button>
+        </div>
+
+        {/* Linha de Versão e Atualização Manual */}
+        <div className="flex items-center justify-between gap-4 border-b border-border/40 pb-3.5 mb-3.5">
+          <div className="flex-1">
+            <p className="text-xs font-extrabold text-foreground">Versão do Aplicativo</p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">
+              Versão instalada: v{localStorage.getItem('app_version') || '1.0.0'}
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            disabled={checkingUpdate}
+            onClick={handleCheckUpdate} 
+            className="text-xs font-extrabold text-primary border-primary/20 hover:bg-primary/5 h-8 gap-1.5"
+          >
+            {checkingUpdate ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3.5 h-3.5" />
+            )}
+            Atualizar
           </Button>
         </div>
 
