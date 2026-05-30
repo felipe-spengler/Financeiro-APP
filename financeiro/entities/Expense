@@ -1,0 +1,93 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "amount": {
+      "type": "number",
+      "description": "Total amount of the expense"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the purchase"
+    },
+    "merchant": {
+      "type": "string",
+      "description": "Name of the establishment/merchant"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "alimentacao",
+        "transporte",
+        "hospedagem",
+        "saude",
+        "educacao",
+        "entretenimento",
+        "compras",
+        "servicos",
+        "outros"
+      ],
+      "description": "Expense category"
+    },
+    "description": {
+      "type": "string",
+      "description": "Additional description or notes"
+    },
+    "tax_amount": {
+      "type": "number",
+      "description": "Tax amount if identified"
+    },
+    "receipt_image_url": {
+      "type": "string",
+      "description": "URL of the uploaded receipt image"
+    },
+    "is_reimbursable": {
+      "type": "boolean",
+      "description": "Whether this expense is reimbursable"
+    },
+    "reimbursement_status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "enviado",
+        "aprovado",
+        "rejeitado"
+      ],
+      "description": "Status of reimbursement"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "Associated project ID"
+    },
+    "currency": {
+      "type": "string",
+      "default": "BRL",
+      "description": "Currency code"
+    },
+    "is_duplicate_suspect": {
+      "type": "boolean",
+      "description": "Whether this might be a duplicate"
+    },
+    "ocr_raw_text": {
+      "type": "string",
+      "description": "Raw text extracted by OCR"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "dinheiro",
+        "credito",
+        "debito",
+        "pix",
+        "transferencia",
+        "outro"
+      ],
+      "description": "Payment method"
+    }
+  },
+  "required": [
+    "amount",
+    "date"
+  ]
+}

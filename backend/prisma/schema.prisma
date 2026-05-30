@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  name          String?
+  createdAt     DateTime  @default(now())
+  
+  // Relacionamentos
+  expenses      Expense[]
+  projects      Project[]
+  creditCards   CreditCard[]
+}
+
+model Project {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  budget      Float     @default(0.0) // Meta Limite de Gasto
+  createdAt   DateTime  @default(now())
+  
+  userId      String    
+  user        User      @relation(fields: [userId], references: [id])
+  expenses    Expense[]
+}
+
+model CreditCard {
+  id          String    @id @default(uuid())
+  name        String
+  limit       Float     @default(0.0)
+  closingDay  Int       @default(10)
+  dueDay      Int       @default(20)
+  createdAt   DateTime  @default(now())
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  expenses    Expense[]
+}
+
+model Expense {
+  id              String   @id @default(uuid())
+  
+  // Valores e Cambial
+  amount          Float     // Preço Pago na Moeda Original
+  currency        String   @default("BRL")    // "BRL", "USD", "EUR"
+  exchangeRate    Float    @default(1.0)  // Cotação no dia da compra
+  amountInBRL     Float     // (amount * exchangeRate) - Para geração de relatórios e Budget somado.
+  taxAmount       Float    @default(0.0)
+  
+  // Metadados
+  date            DateTime 
+  merchant        String?  
+  category        String   @default("outros") 
+  description     String?
+  paymentMethod   String?  @default("money_pix") // "money_pix", "credit_card"
+  isReimbursable  Boolean  @default(false)
+  receiptImageUrl String?  // Link seguro (AWS / R2)
+  ocrRawText      String?  
+  
+  // Novos campos para Controle Financeiro por Voz / Carteiras Duplas
+  flowType        String   @default("pessoal")   // "pessoal", "empresa"
+  type            String   @default("saida")     // "entrada", "saida"
+  
+  // Relacionamento Opcional
+  projectId       String?
+  project         Project? @relation(fields: [projectId], references: [id])
+  
+  linkedCardId    String?
+  creditCard      CreditCard? @relation(fields: [linkedCardId], references: [id])
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  createdAt       DateTime @default(now())
+}

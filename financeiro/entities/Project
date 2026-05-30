@@ -1,0 +1,47 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Project or trip name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "projeto",
+        "viagem",
+        "empresa"
+      ],
+      "description": "Type of grouping"
+    },
+    "budget": {
+      "type": "number",
+      "description": "Budget limit"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "concluido",
+        "arquivado"
+      ],
+      "default": "ativo"
+    },
+    "description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}
