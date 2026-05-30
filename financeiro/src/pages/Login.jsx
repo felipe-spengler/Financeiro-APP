@@ -186,6 +186,9 @@ export default function Login() {
                 {isRegister ? "Faça login" : "Crie uma conta"}
               </button>
             </div>
+            <div className="text-[10px] text-slate-600 font-mono tracking-wider">
+              Versão {localStorage.getItem('app_version') || '1.0.0'}
+            </div>
           </CardFooter>
         </Card>
       </motion.div>
