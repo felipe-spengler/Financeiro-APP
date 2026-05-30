@@ -41,6 +41,10 @@ fastify.decorate("authenticate", async function (request: any, reply: any) {
   }
 })
 
+fastify.get('/api/version', async (request, reply) => {
+  return { version: '1.0.2' };
+});
+
 // === 1. ROTAS DE AUTENTICAÇÃO ===
 fastify.post('/api/auth/register', async (request, reply) => {
   const { email, password, name, hasCompany } = request.body as any;

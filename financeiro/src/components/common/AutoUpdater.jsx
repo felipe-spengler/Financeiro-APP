@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Download, RefreshCw, Wallet } from 'lucide-react';
+import { apiClient } from '@/api/base44Client';
 
 export default function AutoUpdater() {
   const [status, setStatus] = useState('idle'); // 'idle' | 'checking' | 'updating' | 'ready'
@@ -18,12 +19,9 @@ export default function AutoUpdater() {
       // Obter versão local (padrão é 1.0.0 na primeira instalação)
       let localVersion = localStorage.getItem('app_version') || '1.0.0';
       
-      // Buscar versão mais recente do backend VPS (bypassando o cache com query param)
-      const res = await fetch(`/version.json?t=${Date.now()}`);
-      if (!res.ok) throw new Error('Não foi possível obter a versão.');
-      
-      const data = await res.json();
-      const backendVersion = data.version;
+      // Buscar versão mais recente do backend VPS
+      const res = await apiClient.get('/version');
+      const backendVersion = res.data.version;
 
       console.log(`[AutoUpdater] Versão Local: ${localVersion} | Versão Servidor: ${backendVersion}`);
 

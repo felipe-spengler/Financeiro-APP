@@ -16,9 +16,8 @@ export default function Login() {
   const [backendVersion, setBackendVersion] = useState('...');
   
   useEffect(() => {
-    fetch(`/version.json?t=${Date.now()}`)
-      .then(res => res.json())
-      .then(data => setBackendVersion(data.version))
+    apiClient.get('/version')
+      .then(res => setBackendVersion(res.data.version))
       .catch(() => setBackendVersion('offline'));
   }, []);
   
