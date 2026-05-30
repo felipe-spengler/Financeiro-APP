@@ -13,9 +13,10 @@ import Expenses from '@/pages/Expenses';
 import Projects from '@/pages/Projects';
 import ProjectDetail from '@/pages/ProjectDetail';
 import Reports from '@/pages/Reports';
+import Login from '@/pages/Login';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isAuthenticated, isLoadingAuth, isLoadingPublicSettings } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -25,13 +26,8 @@ const AuthenticatedApp = () => {
     );
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
+  if (!isAuthenticated) {
+    return <Login />;
   }
 
   return (

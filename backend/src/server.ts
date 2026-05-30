@@ -4,8 +4,13 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyCors from '@fastify/cors';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
+
+function hashPassword(password: string): string {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY as string });
 
@@ -38,25 +43,80 @@ fastify.decorate("authenticate", async function (request: any, reply: any) {
 
 // === 1. ROTAS DE AUTENTICAÇÃO ===
 fastify.post('/api/auth/register', async (request, reply) => {
-  return { status: "Feature em construção" };
+  const { email, password, name } = request.body as any;
+  if (!email || !password) {
+    return reply.status(400).send({ error: "E-mail e senha são obrigatórios." });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Verificar se o usuário já existe
+  const existing = await prisma.user.findUnique({
+    where: { email: normalizedEmail }
+  });
+  if (existing) {
+    return reply.status(400).send({ error: "Este e-mail já está sendo utilizado." });
+  }
+
+  try {
+    const user = await prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        passwordHash: hashPassword(password),
+        name: name || email.split('@')[0],
+      }
+    });
+
+    const token = fastify.jwt.sign({ id: user.id, name: user.name });
+    return { token, user: { id: user.id, name: user.name, email: user.email } };
+  } catch (error: any) {
+    return reply.status(500).send({ error: "Erro ao criar usuário: " + error.message });
+  }
 });
 
 fastify.post('/api/auth/login', async (request, reply) => {
-  const token = fastify.jwt.sign({ id: "user_test", name: "Felipe" });
-  return { token };
+  const { email, password } = request.body as any;
+  if (!email || !password) {
+    return reply.status(400).send({ error: "E-mail e senha são obrigatórios." });
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail }
+  });
+
+  if (!user || user.passwordHash !== hashPassword(password)) {
+    return reply.status(401).send({ error: "E-mail ou senha incorretos." });
+  }
+
+  const token = fastify.jwt.sign({ id: user.id, name: user.name });
+  return { token, user: { id: user.id, name: user.name, email: user.email } };
 });
 
 fastify.get('/api/auth/me', { preValidation: [(fastify as any).authenticate] }, async (request: any, reply: any) => {
-  return {
-    id: request.user.id,
-    name: "Felipe Autenticado",
-    email: "felipe@teste.com"
-  };
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: request.user.id }
+    });
+    if (!user) {
+      return reply.status(404).send({ error: "Usuário não encontrado." });
+    }
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email
+    };
+  } catch (err: any) {
+    return reply.status(500).send({ error: err.message });
+  }
 });
 
 // === 2. PROJETOS E BUDGETS ===
-fastify.get('/api/projects', { preValidation: [(fastify as any).authenticate] }, async (request, reply) => {
-  return await prisma.project.findMany();
+fastify.get('/api/projects', { preValidation: [(fastify as any).authenticate] }, async (request: any, reply) => {
+  return await prisma.project.findMany({
+    where: { userId: request.user.id }
+  });
 });
 
 fastify.post('/api/projects', { preValidation: [(fastify as any).authenticate] }, async (request: any, reply: any) => {
