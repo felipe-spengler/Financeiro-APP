@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,14 @@ export default function Login() {
   const [isRegister, setIsRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [backendVersion, setBackendVersion] = useState('...');
+  
+  useEffect(() => {
+    fetch(`/version.json?t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => setBackendVersion(data.version))
+      .catch(() => setBackendVersion('offline'));
+  }, []);
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -187,7 +195,7 @@ export default function Login() {
               </button>
             </div>
             <div className="text-[10px] text-slate-600 font-mono tracking-wider">
-              Versão {localStorage.getItem('app_version') || '1.0.0'}
+              Versão {localStorage.getItem('app_version') || '1.0.0'} (Servidor: {backendVersion})
             </div>
           </CardFooter>
         </Card>
