@@ -45,6 +45,7 @@ jobs:
           cd financeiro
           npm install @capacitor/android
           npx cap add android
+          npx @capacitor/assets generate
           npx cap sync
 
       - name: Build Android APK (Debug)
