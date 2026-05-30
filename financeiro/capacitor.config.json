@@ -3,6 +3,7 @@
   "appName": "FinanceiroApp",
   "webDir": "dist",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "url": "https://diario.techinteligente.site"
   }
 }
