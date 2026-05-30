@@ -43,7 +43,7 @@ fastify.decorate("authenticate", async function (request: any, reply: any) {
 
 // === 1. ROTAS DE AUTENTICAÇÃO ===
 fastify.post('/api/auth/register', async (request, reply) => {
-  const { email, password, name } = request.body as any;
+  const { email, password, name, hasCompany } = request.body as any;
   if (!email || !password) {
     return reply.status(400).send({ error: "E-mail e senha são obrigatórios." });
   }
@@ -64,11 +64,12 @@ fastify.post('/api/auth/register', async (request, reply) => {
         email: normalizedEmail,
         passwordHash: hashPassword(password),
         name: name || email.split('@')[0],
+        hasCompany: hasCompany !== undefined ? Boolean(hasCompany) : true,
       }
     });
 
     const token = fastify.jwt.sign({ id: user.id, name: user.name });
-    return { token, user: { id: user.id, name: user.name, email: user.email } };
+    return { token, user: { id: user.id, name: user.name, email: user.email, hasCompany: user.hasCompany } };
   } catch (error: any) {
     return reply.status(500).send({ error: "Erro ao criar usuário: " + error.message });
   }
@@ -91,7 +92,7 @@ fastify.post('/api/auth/login', async (request, reply) => {
   }
 
   const token = fastify.jwt.sign({ id: user.id, name: user.name });
-  return { token, user: { id: user.id, name: user.name, email: user.email } };
+  return { token, user: { id: user.id, name: user.name, email: user.email, hasCompany: user.hasCompany } };
 });
 
 fastify.get('/api/auth/me', { preValidation: [(fastify as any).authenticate] }, async (request: any, reply: any) => {
@@ -105,10 +106,34 @@ fastify.get('/api/auth/me', { preValidation: [(fastify as any).authenticate] }, 
     return {
       id: user.id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      hasCompany: user.hasCompany
     };
   } catch (err: any) {
     return reply.status(500).send({ error: err.message });
+  }
+});
+
+fastify.put('/api/auth/profile', { preValidation: [(fastify as any).authenticate] }, async (request: any, reply: any) => {
+  try {
+    const { name, hasCompany } = request.body as any;
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (hasCompany !== undefined) updateData.hasCompany = Boolean(hasCompany);
+
+    const user = await prisma.user.update({
+      where: { id: request.user.id },
+      data: updateData
+    });
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      hasCompany: user.hasCompany
+    };
+  } catch (err: any) {
+    return reply.status(500).send({ error: "Erro ao atualizar perfil: " + err.message });
   }
 });
 
@@ -199,11 +224,20 @@ fastify.post('/api/ai/parse-voice', { preValidation: [(fastify as any).authentic
   }
 
   try {
+    const user = await prisma.user.findUnique({
+      where: { id: request.user.id }
+    });
+    const hasCompany = user?.hasCompany ?? true;
+
+    const companyInstruction = !hasCompany 
+      ? "\nIMPORTANTE: O usuário NÃO tem empresa (desativado). Ignore qualquer referência a CNPJ, firma ou empresa. Defina ESTRITAMENTE o campo 'flowType' como 'pessoal'.\n"
+      : "";
+
     const prompt = `Você é um analista financeiro de voz inteligente para um aplicativo de controle de gastos em português.
 Seu objetivo é analisar a transcrição de voz fornecida e extrair de forma inteligente os atributos financeiros em formato JSON.
 
 Texto falado: "${text}"
-
+${companyInstruction}
 Regras para preenchimento de campos:
 1. "amount": O valor numérico da compra/entrada. Exemplo: "50 reais" -> 50.00, "1500 de vendas" -> 1500.00.
 2. "type": Se é uma despesa/saída ("saida") ou uma receita/entrada ("entrada"). Inferido a partir do contexto:

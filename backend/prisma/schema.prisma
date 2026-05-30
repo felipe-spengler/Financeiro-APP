@@ -12,6 +12,7 @@ model User {
   email         String    @unique
   passwordHash  String
   name          String?
+  hasCompany    Boolean   @default(true)
   createdAt     DateTime  @default(now())
   
   // Relacionamentos

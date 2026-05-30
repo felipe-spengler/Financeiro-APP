@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +30,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function ScanReceipt() {
+  const { user } = useAuth();
+  const hasCompany = user?.hasCompany ?? true;
   const [step, setStep] = useState('voice'); // voice, processing, review
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -111,7 +114,7 @@ export default function ScanReceipt() {
         ...prev,
         amount: result.amount || '',
         type: result.type || 'saida',
-        flowType: result.flowType || 'pessoal',
+        flowType: hasCompany ? (result.flowType || 'pessoal') : 'pessoal',
         paymentMethod: result.paymentMethod || 'money_pix',
         merchant: result.merchant || '',
         category: result.category || 'outros',
@@ -345,40 +348,42 @@ export default function ScanReceipt() {
             </div>
 
             {/* Seletor CPF vs CNPJ (Pessoal vs Empresa) */}
-            <div className="grid grid-cols-2 gap-3">
-              <div 
-                onClick={() => updateField('flowType', 'pessoal')}
-                className={`border rounded-xl p-3 flex items-center gap-2.5 cursor-pointer transition-all active:scale-[0.98] ${
-                  formData.flowType === 'pessoal' 
-                    ? 'border-primary bg-primary/5 shadow-sm' 
-                    : 'border-border bg-card'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${formData.flowType === 'pessoal' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                  <User className="w-4 h-4" />
+            {hasCompany && (
+              <div className="grid grid-cols-2 gap-3">
+                <div 
+                  onClick={() => updateField('flowType', 'pessoal')}
+                  className={`border rounded-xl p-3 flex items-center gap-2.5 cursor-pointer transition-all active:scale-[0.98] ${
+                    formData.flowType === 'pessoal' 
+                      ? 'border-primary bg-primary/5 shadow-sm' 
+                      : 'border-border bg-card'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${formData.flowType === 'pessoal' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                    <User className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground">Pessoal</p>
+                    <p className="text-[9px] text-muted-foreground">Carteira CPF</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-foreground">Pessoal</p>
-                  <p className="text-[9px] text-muted-foreground">Carteira CPF</p>
+                <div 
+                  onClick={() => updateField('flowType', 'empresa')}
+                  className={`border rounded-xl p-3 flex items-center gap-2.5 cursor-pointer transition-all active:scale-[0.98] ${
+                    formData.flowType === 'empresa' 
+                      ? 'border-purple-500 bg-purple-500/5 shadow-sm' 
+                      : 'border-border bg-card'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${formData.flowType === 'empresa' ? 'bg-purple-500/20 text-purple-500' : 'bg-muted text-muted-foreground'}`}>
+                    <Building className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground">Empresa</p>
+                    <p className="text-[9px] text-muted-foreground">Carteira CNPJ</p>
+                  </div>
                 </div>
               </div>
-              <div 
-                onClick={() => updateField('flowType', 'empresa')}
-                className={`border rounded-xl p-3 flex items-center gap-2.5 cursor-pointer transition-all active:scale-[0.98] ${
-                  formData.flowType === 'empresa' 
-                    ? 'border-purple-500 bg-purple-500/5 shadow-sm' 
-                    : 'border-border bg-card'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${formData.flowType === 'empresa' ? 'bg-purple-500/20 text-purple-500' : 'bg-muted text-muted-foreground'}`}>
-                  <Building className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-foreground">Empresa</p>
-                  <p className="text-[9px] text-muted-foreground">Carteira CNPJ</p>
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Valor & Data */}
             <div className="grid grid-cols-2 gap-3">

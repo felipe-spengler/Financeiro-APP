@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { useAuth } from '@/lib/AuthContext';
 import { formatCurrency } from '@/lib/constants';
 import EmptyState from '@/components/common/EmptyState';
 import { Plus, FolderOpen, Briefcase, Plane, Building2, Loader2, ChevronRight } from 'lucide-react';
@@ -26,6 +28,7 @@ const TYPE_LABELS = {
 };
 
 export default function Projects() {
+  const { user, logout, updateProfile } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ name: '', type: 'projeto', budget: '', description: '' });
   const queryClient = useQueryClient();
@@ -63,6 +66,43 @@ export default function Projects() {
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto">
+      {/* Seção de Configurações / Perfil */}
+      <Card className="p-4 mb-6 border-border/40 bg-card shadow-sm">
+        <div className="flex items-center justify-between border-b border-border/40 pb-3.5 mb-3.5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white font-extrabold text-sm shadow-md shadow-primary/10">
+              {user?.name?.substring(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-sm font-extrabold text-foreground">{user?.name}</p>
+              <p className="text-[10px] text-muted-foreground">{user?.email}</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => logout(true)} className="text-xs font-bold text-destructive hover:bg-destructive/10">
+            Sair
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <p className="text-xs font-extrabold text-foreground">Gerenciar CNPJ (Empresa)</p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">
+              Ativa a carteira dupla CPF/CNPJ e widgets de partilha proporcional de faturas de cartão.
+            </p>
+          </div>
+          <Switch 
+            checked={user?.hasCompany ?? true} 
+            onCheckedChange={async (checked) => {
+              try {
+                await updateProfile({ hasCompany: checked });
+              } catch (err) {
+                console.error(err);
+              }
+            }}
+          />
+        </div>
+      </Card>
+
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-foreground">Projetos</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

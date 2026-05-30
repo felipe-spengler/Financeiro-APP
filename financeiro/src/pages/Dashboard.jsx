@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import { formatCurrency } from '@/lib/constants';
 import StatCard from '@/components/common/StatCard';
 import SpendingChart from '@/components/dashboard/SpendingChart';
@@ -26,6 +27,8 @@ export default function Dashboard() {
   const [period, setPeriod] = useState('month');
   const [wallet, setWallet] = useState('all'); // 'all', 'pessoal', 'empresa'
   const { toast } = useToast();
+  const { user } = useAuth();
+  const hasCompany = user?.hasCompany ?? true;
 
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ['expenses'],
@@ -36,8 +39,12 @@ export default function Dashboard() {
     const now = new Date();
     return expenses.filter((e) => {
       // Filtro de Carteira (Dual-Wallet)
-      if (wallet === 'pessoal' && e.flowType !== 'pessoal') return false;
-      if (wallet === 'empresa' && e.flowType !== 'empresa') return false;
+      if (!hasCompany) {
+        if (e.flowType !== 'pessoal') return false;
+      } else {
+        if (wallet === 'pessoal' && e.flowType !== 'pessoal') return false;
+        if (wallet === 'empresa' && e.flowType !== 'empresa') return false;
+      }
 
       if (!e.date) return false;
       const d = new Date(e.date);
@@ -51,7 +58,7 @@ export default function Dashboard() {
       }
       return d.getFullYear() === now.getFullYear();
     });
-  }, [expenses, period, wallet]);
+  }, [expenses, period, wallet, hasCompany]);
 
   // Cálculos Gerais das Métricas
   const totalAmount = filtered.reduce((sum, e) => sum + (e.amount || 0), 0);
@@ -100,45 +107,47 @@ export default function Dashboard() {
         <EmptyState
           icon={Mic}
           title="Nenhum registro ainda"
-          description="Toque no botão de microfone e diga seu primeiro gasto pessoal ou da empresa!"
+          description={hasCompany ? "Toque no botão de microfone e diga seu primeiro gasto pessoal ou da empresa!" : "Toque no botão de microfone e diga seu primeiro gasto!"}
           actionLabel="Registrar por Voz"
           actionPath="/scan"
         />
       ) : (
         <>
           {/* Seletor CPF vs CNPJ (Dual-Wallet Selector) */}
-          <div className="grid grid-cols-3 gap-2 bg-muted p-1 rounded-xl mb-4">
-            <button
-              onClick={() => setWallet('all')}
-              className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                wallet === 'all'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              🔄 Geral
-            </button>
-            <button
-              onClick={() => setWallet('pessoal')}
-              className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                wallet === 'pessoal'
-                  ? 'bg-background text-primary shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              👤 Pessoal (CPF)
-            </button>
-            <button
-              onClick={() => setWallet('empresa')}
-              className={`py-2 text-xs font-bold rounded-lg transition-all ${
-                wallet === 'empresa'
-                  ? 'bg-background text-purple-500 shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              🏢 Empresa (CNPJ)
-            </button>
-          </div>
+          {hasCompany && (
+            <div className="grid grid-cols-3 gap-2 bg-muted p-1 rounded-xl mb-4">
+              <button
+                onClick={() => setWallet('all')}
+                className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                  wallet === 'all'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                🔄 Geral
+              </button>
+              <button
+                onClick={() => setWallet('pessoal')}
+                className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                  wallet === 'pessoal'
+                    ? 'bg-background text-primary shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                👤 Pessoal (CPF)
+              </button>
+              <button
+                onClick={() => setWallet('empresa')}
+                className={`py-2 text-xs font-bold rounded-lg transition-all ${
+                  wallet === 'empresa'
+                    ? 'bg-background text-purple-500 shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                🏢 Empresa (CNPJ)
+              </button>
+            </div>
+          )}
 
           {/* Period Tabs */}
           <Tabs value={period} onValueChange={setPeriod} className="mb-4">
@@ -152,7 +161,7 @@ export default function Dashboard() {
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-3 mb-5">
             <StatCard
-              title={wallet === 'empresa' ? "Entrou / Saída (Empresa)" : (wallet === 'pessoal' ? "Total Pessoal" : "Total Geral")}
+              title={!hasCompany ? "Total de Gastos" : (wallet === 'empresa' ? "Entrou / Saída (Empresa)" : (wallet === 'pessoal' ? "Total Pessoal" : "Total Geral"))}
               value={formatCurrency(totalAmount)}
               icon={DollarSign}
               subtitle={`${filtered.length} lançamentos`}
@@ -165,7 +174,7 @@ export default function Dashboard() {
           </div>
 
           {/* Widget Mágico do Cartão de Crédito Misto */}
-          {totalCardAmount > 0 && (
+          {hasCompany && totalCardAmount > 0 && (
             <div className="bg-card rounded-2xl border border-border p-4 mb-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-extrabold text-foreground flex items-center gap-1.5">

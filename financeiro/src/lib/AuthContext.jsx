@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { base44, apiClient } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 
 const AuthContext = createContext();
@@ -58,6 +58,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const res = await apiClient.put('/auth/profile', profileData);
+      setUser(res.data);
+      return res.data;
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      throw error;
+    }
+  };
+
   const logout = (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
@@ -78,7 +89,8 @@ export const AuthProvider = ({ children }) => {
       appPublicSettings,
       logout,
       navigateToLogin,
-      checkAppState
+      checkAppState,
+      updateProfile
     }}>
       {children}
     </AuthContext.Provider>
