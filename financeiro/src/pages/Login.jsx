@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Lock, Mail, User, Sparkles, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, User, Wallet, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
@@ -79,7 +79,7 @@ export default function Login() {
           
           <CardHeader className="space-y-2 text-center pt-8">
             <div className="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center shadow-lg shadow-primary/20 mb-2">
-              <Sparkles className="w-6 h-6 text-white animate-pulse" />
+              <Wallet className="w-6 h-6 text-white animate-pulse" />
             </div>
             <CardTitle className="text-2xl font-extrabold tracking-tight text-white">
               FinanceiroApp
