@@ -19,5 +19,5 @@ COPY . .
 # Expose port
 EXPOSE 3000
 
-# Start server using ts-node
-CMD ["npm", "run", "dev"]
+# Automatically push the Prisma schema to the database (creating all required tables) before starting the server
+CMD ["sh", "-c", "npx prisma db push && npm run dev"]
