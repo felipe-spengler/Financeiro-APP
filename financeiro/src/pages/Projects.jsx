@@ -12,7 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/lib/AuthContext';
 import { formatCurrency } from '@/lib/constants';
 import EmptyState from '@/components/common/EmptyState';
-import { Plus, FolderOpen, Briefcase, Plane, Building2, Loader2, ChevronRight } from 'lucide-react';
+import { Plus, FolderOpen, Briefcase, Plane, Building2, Loader2, ChevronRight, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 
