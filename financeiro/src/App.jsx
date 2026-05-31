@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import AutoUpdater from '@/components/common/AutoUpdater';
 
 import MobileLayout from '@/components/layout/MobileLayout';
 import Dashboard from '@/pages/Dashboard';
@@ -56,7 +55,6 @@ function App() {
         <Router>
           <AuthenticatedApp />
         </Router>
-        <AutoUpdater />
         <Toaster />
       </PersistQueryClientProvider>
     </AuthProvider>
