@@ -49,23 +49,34 @@ export default function Projects() {
       const res = await apiClient.get('/version');
       const backendVersion = res.data.version;
 
+      // Limpar todos os caches do browser/webview
+      if ('caches' in window) {
+        const names = await caches.keys();
+        for (let name of names) {
+          await caches.delete(name);
+        }
+      }
+
       if (localVersion !== backendVersion) {
         toast({
           title: "Nova versão encontrada! 🚀",
           description: `Atualizando da versão v${localVersion} para v${backendVersion}...`
         });
         
-        // Limpar a versão local e forçar recarga para que o AutoUpdater mostre o progresso e baixe a nova versão
-        localStorage.setItem('app_version', '1.0.0');
+        localStorage.setItem('app_version', backendVersion);
         
         setTimeout(() => {
           window.location.reload();
-        }, 1500);
+        }, 1200);
       } else {
         toast({
           title: "Aplicativo Atualizado! ✅",
-          description: `Você já está rodando a versão mais recente (v${localVersion}).`
+          description: `Forçando recarga dos arquivos da VPS por segurança...`
         });
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
       }
     } catch (err) {
       console.error(err);
