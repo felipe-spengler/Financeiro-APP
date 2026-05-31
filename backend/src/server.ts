@@ -42,7 +42,7 @@ fastify.decorate("authenticate", async function (request: any, reply: any) {
 })
 
 fastify.get('/api/version', async (request, reply) => {
-  return { version: '1.0.5' };
+  return { version: '1.0.6' };
 });
 
 // === 1. ROTAS DE AUTENTICAÇÃO ===
