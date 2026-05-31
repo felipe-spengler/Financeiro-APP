@@ -50,11 +50,15 @@ export default function Projects() {
       const backendVersion = res.data.version;
 
       // Limpar todos os caches do browser/webview
-      if ('caches' in window) {
-        const names = await caches.keys();
-        for (let name of names) {
-          await caches.delete(name);
+      try {
+        if ('caches' in window && typeof caches !== 'undefined') {
+          const names = await caches.keys();
+          for (let name of names) {
+            await caches.delete(name).catch(() => {});
+          }
         }
+      } catch (e) {
+        console.error("Erro ao limpar caches manuais:", e);
       }
 
       if (localVersion !== backendVersion) {
