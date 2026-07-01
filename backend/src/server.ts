@@ -361,6 +361,21 @@ fastify.post('/api/expenses', { preValidation: [(fastify as any).authenticate] }
   });
 });
 
+// Delete an expense
+fastify.delete('/api/expenses/:id', { preValidation: [(fastify as any).authenticate] }, async (request: any, reply: any) => {
+  const { id } = request.params as any;
+  try {
+    const expense = await prisma.expense.findUnique({ where: { id } });
+    if (!expense || expense.userId !== request.user.id) {
+      return reply.status(404).send({ error: 'Despesa não encontrada.' });
+    }
+    await prisma.expense.delete({ where: { id } });
+    return { success: true };
+  } catch (err: any) {
+    return reply.status(500).send({ error: err.message });
+  }
+});
+
 fastify.post('/api/expenses/sync', { preValidation: [(fastify as any).authenticate] }, async (request: any, reply: any) => {
   const expensesPayload = request.body as any[];
   
